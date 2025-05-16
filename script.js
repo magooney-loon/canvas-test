@@ -17,6 +17,15 @@ let activeTokenAddress = null;
 let priceRefreshInterval = null;
 
 /**
+ * User settings object
+ * @type {Object}
+ */
+const userSettings = {
+    apiKey: '',
+    theme: 'dark'
+};
+
+/**
  * Wait for the DOM to be fully loaded before initializing the app
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addTab = document.getElementById('add-tab');
     const tabCloseButton = document.getElementById('tab-close-button');
     const tabsBar = document.getElementById('tabs-bar');
-    const noTokensPlaceholder = document.getElementById('no-tokens-placeholder');
+    const settingsButton = document.getElementById('settings-button');
 
     // Add event listeners
     addTab.addEventListener('click', promptForTokenAddress);
@@ -57,9 +66,160 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Initialize settings button
+    settingsButton.addEventListener('click', () => {
+        const settingsModal = document.getElementById('settings-modal');
+        settingsModal.classList.remove('hidden');
+        setTimeout(() => {
+            settingsModal.classList.add('active');
+        }, 10);
+    });
+
+    // Initialize settings
+    initSettings();
+
     // Load saved tabs
     loadSavedTabs();
+    
+    // Show Birdeye iframe by default (even without tokens)
+    const birdeyeContainer = document.getElementById('birdeye-iframe-container');
+    if (birdeyeContainer) {
+        birdeyeContainer.classList.remove('hidden');
+        
+        // If no token is selected, load the default SOL chart
+        if (!activeTokenAddress) {
+            loadBirdeyeIframe('So11111111111111111111111111111111111111112');
+        }
+    }
+    
+    // Initialize Jupiter Terminal in integrated mode
+    initJupiterTerminal();
 });
+
+/**
+ * Initialize Jupiter Terminal in integrated mode
+ */
+function initJupiterTerminal() {
+    // Get initial input mint based on active token or fallback to SOL
+    const initialInputMint = activeTokenAddress && tokenStore.has(activeTokenAddress) 
+        ? activeTokenAddress 
+        : "3S8qX1MsMqRbiwKg2cQyx7nis1oHMgaCuc9c4VfvVdPN";
+
+    // Initialize Jupiter Terminal
+    window.Jupiter.init({
+        displayMode: "integrated",
+        integratedTargetId: "integrated-terminal",
+        defaultExplorer: "Solscan",
+        formProps: {
+            initialInputMint: initialInputMint,
+            fixedMint: "So11111111111111111111111111111111111111112",
+        },
+    });
+}
+
+/**
+ * Initialize settings functionality
+ */
+function initSettings() {
+    const settingsButton = document.getElementById('settings-button');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeModal = document.getElementById('close-modal');
+    const saveSettings = document.getElementById('save-settings');
+    const themeSwitch = document.getElementById('theme-switch');
+    const themeLabel = document.getElementById('theme-label');
+    const apiKeyInput = document.getElementById('api-key');
+    
+    // Load saved settings
+    loadSettings();
+
+    // Apply current settings to form elements
+    apiKeyInput.value = userSettings.apiKey;
+    themeSwitch.checked = userSettings.theme === 'light';
+    themeLabel.textContent = userSettings.theme === 'light' ? 'Light Mode' : 'Dark Mode';
+    
+    // Apply theme
+    applyTheme(userSettings.theme);
+    
+    // Toggle settings modal
+    settingsButton.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        setTimeout(() => {
+            settingsModal.classList.add('active');
+        }, 10);
+    });
+    
+    // Close modal
+    closeModal.addEventListener('click', closeSettingsModal);
+    
+    // Close modal when clicking outside content
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            closeSettingsModal();
+        }
+    });
+    
+    // Theme toggle
+    themeSwitch.addEventListener('change', () => {
+        const newTheme = themeSwitch.checked ? 'light' : 'dark';
+        themeLabel.textContent = newTheme === 'light' ? 'Light Mode' : 'Dark Mode';
+        applyTheme(newTheme);
+    });
+    
+    // Save settings
+    saveSettings.addEventListener('click', () => {
+        userSettings.apiKey = apiKeyInput.value.trim();
+        userSettings.theme = themeSwitch.checked ? 'light' : 'dark';
+        
+        saveUserSettings();
+        closeSettingsModal();
+    });
+}
+
+/**
+ * Closes the settings modal
+ */
+function closeSettingsModal() {
+    const settingsModal = document.getElementById('settings-modal');
+    settingsModal.classList.remove('active');
+    setTimeout(() => {
+        settingsModal.classList.add('hidden');
+    }, 300);
+}
+
+/**
+ * Applies the selected theme
+ * @param {string} theme - Either 'light' or 'dark'
+ */
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+}
+
+/**
+ * Loads user settings from localStorage
+ */
+function loadSettings() {
+    try {
+        const savedSettings = localStorage.getItem('userSettings');
+        if (savedSettings) {
+            const settings = JSON.parse(savedSettings);
+            userSettings.apiKey = settings.apiKey || '';
+            userSettings.theme = settings.theme || 'dark';
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+/**
+ * Saves user settings to localStorage
+ */
+function saveUserSettings() {
+    try {
+        localStorage.setItem('userSettings', JSON.stringify(userSettings));
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
 
 /**
  * Loads saved tabs from localStorage
@@ -196,7 +356,6 @@ function createTab(address, tokenInfo) {
     const tabsBar = document.getElementById('tabs-bar');
     const addTab = document.getElementById('add-tab');
     const tabCloseButton = document.getElementById('tab-close-button');
-    const noTokensPlaceholder = document.getElementById('no-tokens-placeholder');
     
     // Create tab element
     const tab = document.createElement('div');
@@ -216,9 +375,6 @@ function createTab(address, tokenInfo) {
     
     // Show close button
     tabCloseButton.classList.remove('hidden');
-    
-    // Hide the placeholder message
-    noTokensPlaceholder.classList.add('hidden');
 }
 
 /**
@@ -241,9 +397,6 @@ function setActiveToken(address) {
     // Display token info
     displayTokenInfo(tokenInfo);
     
-    // Initialize Jupiter terminal for this token
-    initJupiterTerminal(address);
-    
     // Set Birdeye.so iframe source
     loadBirdeyeIframe(address);
     
@@ -252,39 +405,18 @@ function setActiveToken(address) {
 
     // Save the active tab state
     saveTabsState();
+    
+    // Update Jupiter Terminal with new token
+    updateJupiterTerminal(address);
 }
 
 /**
- * Initializes Jupiter Terminal widget for the given token address
- * @param {string} tokenAddress - The token address to use as initialInputMint
+ * Updates Jupiter Terminal with a new input token
+ * @param {string} tokenAddress - The token address to use as input
  */
-function initJupiterTerminal(tokenAddress) {
-    const jupiterContainer = document.getElementById('jupiter-terminal-container');
-    
-    // Clear any existing terminal
-    jupiterContainer.innerHTML = '';
-    
-    // Show the container
-    jupiterContainer.classList.remove('hidden');
-    
-    // Initialize Jupiter with the token's address
-    if (window.Jupiter) {
-        window.Jupiter.init({
-            displayMode: "widget",
-            defaultExplorer: "Solscan",
-            formProps: {
-                initialInputMint: tokenAddress,
-            },
-            containerStyles: {
-                background: 'transparent',
-                color: 'white'
-            },
-            containerClassName: 'jupiter-terminal'
-        });
-    } else {
-        console.error('Jupiter Terminal is not loaded');
-        jupiterContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--text-secondary);">Failed to load Jupiter Terminal widget</p>';
-    }
+function updateJupiterTerminal(tokenAddress) {
+    // Reinitialize Jupiter terminal with the new token
+    initJupiterTerminal();
 }
 
 /**
@@ -347,13 +479,15 @@ function closeCurrentTab() {
             const nextTabAddress = remainingTabs[0].dataset.address;
             setActiveToken(nextTabAddress);
         } else {
-            // No tabs left, hide the header and show placeholder
+            // No tabs left, hide the header
             document.getElementById('token-header').classList.add('hidden');
             document.getElementById('tab-close-button').classList.add('hidden');
-            document.getElementById('no-tokens-placeholder').classList.remove('hidden');
-            document.getElementById('jupiter-terminal-container').classList.add('hidden');
-            document.getElementById('birdeye-iframe-container').classList.add('hidden');
+            
+            // Reset active token address
             activeTokenAddress = null;
+            
+            // Show default SOL chart
+            loadBirdeyeIframe('So11111111111111111111111111111111111111112');
         }
 
         // Save the updated tabs state

@@ -18,10 +18,13 @@
             </div>
         </div>
         <button id="tab-close-button" title="Close current tab" class="hidden">×</button>
-        
-        <div id="no-tokens-placeholder">
-            <p>Click the <strong>+</strong> tab to add your first token</p>
-        </div>
+        <!-- Settings Button -->
+        <button id="settings-button" title="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
     </div>
 
     <div id="token-header" class="hidden">
@@ -31,16 +34,47 @@
     <main id="content-area">
         <!-- Token content will be displayed here -->
         <div class="widgets-container">
-            <div id="jupiter-terminal-container" class="hidden widget-container">
-                <!-- Jupiter terminal will be loaded here -->
-            </div>
-            
-            <div id="birdeye-iframe-container" class="hidden widget-container">
+            <div id="birdeye-iframe-container" class="widget-container">
                 <!-- Birdeye.so iframe will be loaded here -->
-                <iframe id="birdeye-embed" title="Birdeye Embed" width="100%" height="600" frameBorder="0" allowfullscreen></iframe>
+                <iframe id="birdeye-embed" title="Birdeye Embed" width="100%" height="100%" frameBorder="0" allowfullscreen></iframe>
             </div>
+            <div id="integrated-terminal" class="widget-container"></div>
         </div>
     </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button id="close-modal" class="close-button">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>Theme</h3>
+                    <div class="theme-toggle">
+                        <input type="checkbox" id="theme-switch" class="theme-switch">
+                        <label for="theme-switch" class="toggle-label">
+                            <span class="toggle-inner"></span>
+                            <span class="toggle-switch"></span>
+                        </label>
+                        <span id="theme-label">Dark Mode</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>API Keys</h3>
+                    <div class="form-group">
+                        <label for="api-key">Your API Key</label>
+                        <input type="text" id="api-key" placeholder="Enter your API key">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings" class="save-button">Save Settings</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
