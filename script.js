@@ -29,6 +29,17 @@ const userSettings = {
  * Wait for the DOM to be fully loaded before initializing the app
  */
 document.addEventListener('DOMContentLoaded', () => {
+    // Register service worker for PWA functionality
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+
     // Get element references
     const addTab = document.getElementById('add-tab');
     const tabCloseButton = document.getElementById('tab-close-button');

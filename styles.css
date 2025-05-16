@@ -3,6 +3,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -34,6 +35,11 @@
     --jupiter-input-bg: var(--bg-tabs);
 }
 
+html {
+    background-color: var(--bg-main);
+    color-scheme: dark;
+}
+
 body {
     min-height: 100vh;
     height: 100vh;
@@ -46,6 +52,50 @@ body {
     color: var(--text-primary);
     margin: 0;
     overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* PWA Specific Styles */
+@media (display-mode: standalone) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    #tabs-container {
+        padding-top: env(safe-area-inset-top);
+    }
+    
+    #bottom-bar {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+}
+
+/* Remove scrollbar in PWA mode */
+@media (display-mode: standalone) {
+    ::-webkit-scrollbar {
+        width: 0px;
+        height: 0px;
+        background: transparent;
+    }
+}
+
+/* Improve scrolling on touch devices */
+@supports (-webkit-overflow-scrolling: touch) {
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #tabs-bar, #token-header {
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    #tabs-bar::-webkit-scrollbar, #token-header::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 main {
